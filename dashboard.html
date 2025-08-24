@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Student Budget Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+
+  <h1 class="text-3xl font-bold mb-6">Student Budget Manager</h1>
+
+  <!-- User Info -->
+  <div id="userInfo" class="mb-4 text-center text-gray-700"></div>
+
+  <!-- Balance Card -->
+  <div class="bg-white shadow-lg rounded-2xl p-6 w-96 text-center mb-4">
+    <h2 class="text-xl font-semibold">Balance: ₹<span id="balance">0</span></h2>
+    <p class="text-green-600">Income: ₹<span id="income">0</span></p>
+    <p class="text-red-600">Expenses: ₹<span id="expenses">0</span></p>
+  </div>
+
+  <!-- Alerts -->
+  <div id="alertBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded w-96 mb-2">
+    ⚠️ Expenses are greater than income! Balance is negative.
+  </div>
+  <div id="alert80" class="hidden bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded w-96 mb-2">
+    ⚠️ You have spent more than 80% of your income!
+  </div>
+  <div id="alert100" class="hidden bg-red-200 border border-red-600 text-red-900 px-4 py-3 rounded w-96 mb-6 font-bold">
+    🚨 You have spent 100% of your income!
+  </div>
+
+  <!-- Add Transaction -->
+  <div class="bg-white shadow-lg rounded-2xl p-6 w-96 mb-6">
+    <h3 class="text-lg font-semibold mb-4">Add Transaction</h3>
+    
+    <input id="amount" type="number" placeholder="Amount" class="w-full p-2 mb-3 border rounded" />
+    <select id="type" onchange="updateCategoryOptions()" class="w-full p-2 mb-3 border rounded">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <select id="category" class="w-full p-2 mb-3 border rounded"></select>
+
+    <button onclick="addTransaction()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add</button>
+  </div>
+
+  <!-- History -->
+  <div class="bg-white shadow-lg rounded-2xl p-6 w-96">
+    <h3 class="text-lg font-semibold mb-4">Transaction History</h3>
+    <ul id="history" class="space-y-2"></ul>
+  </div>
+
+  <script>
+    // Azure Auth user info (if using Static Web Apps)
+    fetch('/.auth/me')
+      .then(res => res.json())
+      .then(user => {
+        if (user && user[0]) {
+          document.getElementById("userInfo").innerText = `Welcome, ${user[0].userDetails}`;
+        }
+      })
+      .catch(() => console.log("Not logged in with Azure"));
+
+    let transactions = [];
+    const incomeCategories = ["Salary", "Pocket Money", "Other"];
+    const expenseCategories = ["Food", "Rent", "Travel", "Entertainment", "Other"];
+    window.onload = updateCategoryOptions;
+
+    function updateCategoryOptions() {
+      const type = document.getElementById("type").value;
+      const categorySelect = document.getElementById("category");
+      categorySelect.innerHTML = "";
+      const options = type === "income" ? incomeCategories : expenseCategories;
+      options.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        categorySelect.appendChild(opt);
+      });
+    }
+
+    function addTransaction() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const type = document.getElementById("type").value;
+      const category = document.getElementById("category").value;
+      if (!amount || isNaN(amount)) return alert("Enter a valid amount!");
+      transactions.push({ id: Date.now(), amount, type, category });
+      updateUI();
+      document.getElementById("amount").value = "";
+    }
+
+    function updateUI() {
+      let income = 0, expenses = 0;
+      const historyList = document.getElementById("history");
+      historyList.innerHTML = "";
+      transactions.forEach(t => {
+        if (t.type === "income") income += t.amount;
+        else expenses += t.amount;
+        const li = document.createElement("li");
+        li.className = "flex justify-between p-2 border-b";
+        li.innerHTML = `<span>${t.category} (${t.type})</span>
+          <span class="${t.type === "income" ? "text-green-600" : "text-red-600"}">₹${t.amount}</span>`;
+        historyList.appendChild(li);
+      });
+      const balance = income - expenses;
+      document.getElementById("income").textContent = income;
+      document.getElementById("expenses").textContent = expenses;
+      document.getElementById("balance").textContent = balance;
+
+      // Alerts
+      document.getElementById("alertBox").classList.toggle("hidden", balance >= 0);
+      document.getElementById("alert80").classList.toggle("hidden", !(income > 0 && expenses >= 0.8 * income && balance > 0));
+      document.getElementById("alert100").classList.toggle("hidden", !(income > 0 && expenses === income));
+    }
+  </script>
+</body>
+</html>
