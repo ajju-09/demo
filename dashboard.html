@@ -52,8 +52,6 @@
   </div>
 
   <script>
-    const API_URL = "http://20.193.132.42/transactions";
-
     // Azure Auth user info (if using Static Web Apps)
     fetch('/.auth/me')
       .then(res => res.json())
@@ -67,11 +65,7 @@
     let transactions = [];
     const incomeCategories = ["Salary", "Pocket Money", "Other"];
     const expenseCategories = ["Food", "Rent", "Travel", "Entertainment", "Other"];
-    
-    window.onload = () => {
-        updateCategoryOptions();
-        loadTransactions();
-    };
+    window.onload = updateCategoryOptions;
 
     function updateCategoryOptions() {
       const type = document.getElementById("type").value;
@@ -86,6 +80,15 @@
       });
     }
 
+    function addTransaction() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const type = document.getElementById("type").value;
+      const category = document.getElementById("category").value;
+      if (!amount || isNaN(amount)) return alert("Enter a valid amount!");
+      transactions.push({ id: Date.now(), amount, type, category });
+      updateUI();
+      document.getElementById("amount").value = "";
+    }
 
     function updateUI() {
       let income = 0, expenses = 0;
@@ -110,34 +113,6 @@
       document.getElementById("alert80").classList.toggle("hidden", !(income > 0 && expenses >= 0.8 * income && balance > 0));
       document.getElementById("alert100").classList.toggle("hidden", !(income > 0 && expenses === income));
     }
-
-    // Load transactions
-async function loadTransactions() {
-  const res = await fetch(API_URL);
-  transactions = await res.json();
-  updateUI();
-}
-
-// Add a new transaction
-async function addTransaction() {
-  const amount = parseFloat(document.getElementById("amount").value);
-  const type = document.getElementById("type").value;
-  const category = document.getElementById("category").value;
-  if (!amount || isNaN(amount)) return alert("Enter a valid amount!");
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, type, category })
-  });
-  const newTransaction = await res.json();
-  transactions.push(newTransaction);
-  updateUI();
-  document.getElementById("amount").value = "";
-}
-
-    
   </script>
 </body>
 </html>
-
