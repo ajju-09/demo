@@ -34,17 +34,17 @@
     const btnSetup = document.getElementById("getSetup");
     const btnPunchline = document.getElementById("getPunchline");
 
-    const GIPHY_API_KEY = "JFHOilypTStQ8qno5UAGKGe3ETCgp09u"; // 🔑 Replace with your Giphy key
+    const GIPHY_API_KEY = "JFHOilypTStQ8qno5UAGKGe3ETCgp09u"; 
     let currentJoke = null;
 
     async function getSetup() {
       try {
-
+        
         punchlineBox.textContent = "";
         gifBox.classList.add("hidden");
         btnPunchline.disabled = true;
 
-
+        
         const jokeRes = await fetch("https://official-joke-api.appspot.com/random_joke");
         const jokeData = await jokeRes.json();
         currentJoke = jokeData;
@@ -52,17 +52,17 @@
         setupBox.textContent = jokeData.setup;
         btnPunchline.disabled = false;
       } catch (err) {
-        setupBox.textContent = "❌ Failed to fetch joke. Try again!";
+        setupBox.textContent = "Failed to fetch joke. Try again!";
         console.error(err);
       }
     }
 
     async function showPunchline() {
       if (!currentJoke) return;
-      punchlineBox.textContent = "👉 " + currentJoke.punchline;
+      punchlineBox.textContent = currentJoke.punchline;
 
       try {
-      
+        
         const gifRes = await fetch(`https://api.giphy.com/v1/gifs/random?api_key=${GIPHY_API_KEY}&tag=funny&rating=g`);
         const gifData = await gifRes.json();
         gifBox.src = gifData.data.images.original.url;
